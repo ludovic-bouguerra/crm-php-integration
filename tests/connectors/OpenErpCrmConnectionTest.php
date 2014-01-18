@@ -2,7 +2,7 @@
 
 namespace fr\ludovicbouguerra\crmconnector\connectors;
 
-include "../../vendors/xmlrpc-3.0.0.beta/lib/xmlrpc.inc";
+include "../../vendors/xmlrpc.inc";
 include "../../lib/exceptions/ConnectionException.php";
 include "../../lib/models/Lead.php";
 include "../../lib/interfaces/CrmConnector.php";
