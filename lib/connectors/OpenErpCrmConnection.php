@@ -4,12 +4,11 @@
 	
 	use fr\ludovicbouguerra\crmconnector\interfaces\CrmConnector;
 	use fr\ludovicbouguerra\crmconnector\interfaces\Lead;
-use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
+	use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
 		
 	class OpenErpConnection implements CrmConnector{
 		
-		private $host;
-		private $port;
+
 		private $url;
 		private $dbName;
 		private $userId;
@@ -19,20 +18,44 @@ use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
 		private $connection;
 		
 		
-		protected function getOrInitConnection(){
-			if ($this->connection == null){
-				$this->connection = new \xmlrpc_client($this->url,$this->host,$this->port);
-				$sock = new \xmlrpc_client($this->url."common");
-				
-				$msg = new \xmlrpcmsg('login');
-				$msg->addParam(new \xmlrpcval($this->dbName, "string"));
-				$msg->addParam(new \xmlrpcval($this->user, "string"));
-				$msg->addParam(new \xmlrpcval($this->password, "string"));
-				$resp =  $sock->send($msg);
-				$val = $resp->value();
-				$this->userId = $val->scalarval();
-			}	
-			return $this->connection;
+
+		/**
+		*	Initialise 
+		*	@param url        : http://
+		*	@param dbName     : Database Name
+		*	@param user       : UserName
+		*	@param password   : Password
+		*/ 
+		public function __construct($url, $dbName, $user, $password){
+			$this->url = $url;
+			$this->dbName = $dbName;
+			$this->user = $user;
+			$this->password = $password;
+			$this->initConnection();
+		}
+		
+
+		protected function getXmlRpcCommonPath(){
+			return $this->url."common";
+		}
+
+		protected function getXmlRpcObjectPath(){
+			return $this->url."object";
+		}
+
+		protected function initConnection(){
+			$sock = new \xmlrpc_client($this->getXmlRpcCommonPath());
+			
+			$msg = new \xmlrpcmsg('login');
+			$msg->addParam(new \xmlrpcval($this->dbName, "string"));
+			$msg->addParam(new \xmlrpcval($this->user, "string"));
+			$msg->addParam(new \xmlrpcval($this->password, "string"));
+			$resp =  $sock->send($msg);
+			$val = $resp->value();
+			$this->userId = $val->scalarval();
+
+			$this->connection = new \xmlrpc_client($this->getXmlRpcObjectPath());
+		
 		}
 		
 		protected function initMessage(){
@@ -43,13 +66,6 @@ use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
 			return $message;
 		}
 			
-		public function setPort($port){
-			$this->port = $port;
-		}
-		
-		public function setHost($host){
-			$this->host = $host;
-		}
 		
 		public function setUrl($url){
 			$this->url = $url;
@@ -70,20 +86,25 @@ use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
 		
 		public function createLead($lead){
 			
+
+
 			$arrayVal = array(
 					'name'=>new \xmlrpcval('Ludovic Bouguerra', "string") ,
 					'vat'=>new \xmlrpcval('BE477472701' , "string")
 			);
 			
+
+
 			$message = $this->initMessage();
+			
 			$message->addParam(new \xmlrpcval("res.partner", "string"));
 			$message->addParam(new \xmlrpcval("create", "string"));
 			$message->addParam(new \xmlrpcval($arrayVal, "struct"));
 			
-			$response = $this->getOrInitConnection()->send($message);
-
+			$response = $this->connection->send($message);
+			
 			if ($response->faultCode())
-				throw new ConnectionException("Cannot create partner". $response->faultString());
+				throw new ConnectionException("Cannot create partner : ". $response->faultString());
 			else
 				return $response->value()->scalarval();
 		}

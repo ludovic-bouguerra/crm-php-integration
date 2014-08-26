@@ -19,11 +19,5 @@ class OpenErpCrmConnectionTest {
 
 }
 
-$openErp = new OpenErpConnection();
-$openErp->setHost("localhost");
-$openErp->setPort(8069);
-$openErp->setUrl("http://localhost:8069/xmlrpc/");
-$openErp->setDbName("kalyzee");
-$openErp->setUser("admin");
-$openErp->setPassword("test");
+$openErp = new OpenErpConnection("http://localhost:8069/xmlrpc/", "test", "admin", "test");
 $openErp->createLead(null);
