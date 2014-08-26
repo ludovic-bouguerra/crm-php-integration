@@ -5,7 +5,7 @@
 	use fr\ludovicbouguerra\crmconnector\interfaces\CrmConnector;
 	use fr\ludovicbouguerra\crmconnector\interfaces\Lead;
 	use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
-		
+	
 	class OpenErpConnection implements CrmConnector{
 		
 
@@ -84,17 +84,13 @@
 			$this->password= $password;
 		}
 		
-		public function createLead($lead){
+		public function createLead(Lead $lead){
 			
-
-
 			$arrayVal = array(
 					'name'=>new \xmlrpcval('Ludovic Bouguerra', "string") ,
 					'vat'=>new \xmlrpcval('BE477472701' , "string")
 			);
 			
-
-
 			$message = $this->initMessage();
 			
 			$message->addParam(new \xmlrpcval("res.partner", "string"));
@@ -109,16 +105,16 @@
 				return $response->value()->scalarval();
 		}
 		
-		public function updateLead($lead){
+		public function updateLead(Lead $lead){
 			
 			
 		}
 		
-		public function getLead(){
+		public function getLead($id){
 			
 		}
 		
-		public function deleteLead($lead){
+		public function deleteLead(Lead $lead){
 			
 		}
 		
