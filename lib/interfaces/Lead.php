@@ -1,8 +1,9 @@
 <?php
 
 	namespace fr\ludovicbouguerra\crmconnector\interfaces;
+	use fr\ludovicbouguerra\crmconnector\interfaces\Identifiable;
 
-	interface Lead{
+	interface Lead extends Identifiable{
 
 		/**
 		* Internal Id

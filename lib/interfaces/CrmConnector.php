@@ -8,15 +8,10 @@
 	interface CrmConnector{
 		
 		/**
-		*
+		*	Save or Update Lead
 		*/
-		public function createLead(Lead $lead);
+		public function saveLead(Lead $lead);
 
-		/**
-		*
-		*/
-		public function updateLead(Lead $lead);
-		
 		/**
 		* Get a lead by internal ID
 		* @return fr\ludovicbouguerra\crmconnector\interfaces\Lead Lead
@@ -26,8 +21,8 @@
 		public function deleteLead(Lead $lead);
 		
 		
-		public function createInvoice($lead);
-		public function removeInvoice();
-		public function getInvoice($lead);
+		public function createInvoice($invoic);
+		public function deleteInvoice($id);
+		public function getInvoice($id);
 		
 	}

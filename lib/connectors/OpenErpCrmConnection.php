@@ -5,7 +5,8 @@
 	use fr\ludovicbouguerra\crmconnector\interfaces\CrmConnector;
 	use fr\ludovicbouguerra\crmconnector\interfaces\Lead;
 	use fr\ludovicbouguerra\crmconnector\exceptions\ConnectionException;
-	
+	use fr\ludovicbouguerra\crmconnector\interfaces\Identifiable;
+
 	class OpenErpConnection implements CrmConnector{
 		
 
@@ -51,7 +52,11 @@
 			$msg->addParam(new \xmlrpcval($this->user, "string"));
 			$msg->addParam(new \xmlrpcval($this->password, "string"));
 			$resp =  $sock->send($msg);
+			if ($resp->errno != 0){
+				throw new ConnectionException($resp->errstr);
+			}
 			$val = $resp->value();
+
 			$this->userId = $val->scalarval();
 
 			$this->connection = new \xmlrpc_client($this->getXmlRpcObjectPath());
@@ -66,7 +71,33 @@
 			return $message;
 		}
 			
+		protected function execute($model, $action, $params){
+			$message = $this->initMessage();
+			
+			$message->addParam(new \xmlrpcval($model, "string"));
+			$message->addParam(new \xmlrpcval($action, "string"));
+			foreach ($params as $param){
+				$message->addParam($param);	
+			}
+			$response = $this->connection->send($message);
+			
+			if ($response->faultCode())
+				throw new ConnectionException($response->faultString());
+			else
+				return $response;
+		}
 		
+		protected function executeDelete($model, $id){
+			$arrayIds = array(new \xmlrpcval($id, "int"));
+			$this->execute($model, "unlink", array(new \xmlrpcval($arrayIds, "array")));
+		}
+
+		protected function executeCreate($model, $array, Identifiable $identifiable){
+			$response = $this->execute($model, "create", array(new \xmlrpcval($array, "struct")));
+			$identifiable->setId($response->value()->scalarval());
+
+		}
+
 		public function setUrl($url){
 			$this->url = $url;
 		}
@@ -84,38 +115,26 @@
 			$this->password= $password;
 		}
 		
-		public function createLead(Lead $lead){
-			
+		public function saveLead(Lead $lead){
+						
 			$arrayVal = array(
-					'name'=>new \xmlrpcval('Ludovic Bouguerra', "string") ,
-					'vat'=>new \xmlrpcval('BE477472701' , "string")
+					'name'=>new \xmlrpcval($lead->getFullName(), "string") ,
 			);
 			
-			$message = $this->initMessage();
-			
-			$message->addParam(new \xmlrpcval("res.partner", "string"));
-			$message->addParam(new \xmlrpcval("create", "string"));
-			$message->addParam(new \xmlrpcval($arrayVal, "struct"));
-			
-			$response = $this->connection->send($message);
-			
-			if ($response->faultCode())
-				throw new ConnectionException("Cannot create partner : ". $response->faultString());
-			else
-				return $response->value()->scalarval();
+			$response = $this->executeCreate("res.partner", $arrayVal, $lead);
 		}
 		
-		public function updateLead(Lead $lead){
-			
-			
-		}
 		
 		public function getLead($id){
 			
 		}
 		
 		public function deleteLead(Lead $lead){
-			
+			$this->deleteLeadById($lead->getId());
+		}
+
+		public function deleteLeadById($id){
+			$this->executeDelete("res.partner", $id);
 		}
 		
 		public function createInvoice($lead){
@@ -123,7 +142,7 @@
 			
 		}
 		
-		public function removeInvoice(){
+		public function deleteInvoice($id){
 			
 			
 		}
